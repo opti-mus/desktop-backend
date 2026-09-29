@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { authRouter } from "./auth.js";
-import { healthRouter } from "./health.js";
+import { configRouter } from "./health.js";
 import { usersRouter } from "./users.js";
 
 export const apiRouter = Router();
@@ -12,6 +12,6 @@ apiRouter.get("/", (_req, res) => {
   });
 });
 
-apiRouter.use("/health", healthRouter);
+apiRouter.use("/config", configRouter);
 apiRouter.use("/auth", authRouter);
 apiRouter.use("/users", usersRouter);
