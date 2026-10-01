@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs'
 import { Router } from 'express'
 import { signToken } from '../auth/token.js'
 import { requireAuth } from '../middleware/auth.js'
-import { createUser, findUserByEmail, toPublicUser } from '../store/users.js'
+import { usersStore } from '../store/users.ts'
 
 export const authRouter = Router()
 
@@ -38,17 +38,16 @@ authRouter.post('/register', async (req, res, next) => {
             return
         }
 
-        if (findUserByEmail(email)) {
+        if (usersStore.findUserByEmail(email)) {
             res.status(409).json({ error: 'Email is already registered' })
             return
         }
 
         const passwordHash = await bcrypt.hash(password, 10)
-        const user = createUser({ email, name, passwordHash })
-        // const config = createConfig({userID: user.id, config})
+        const user = usersStore.createUser({ email, name, passwordHash })
 
         res.status(201).json({
-            data: toPublicUser(user),
+            data: user,
             token: signToken(user)
         })
     } catch (err) {
@@ -65,7 +64,7 @@ authRouter.post('/login', async (req, res, next) => {
             return
         }
 
-        const user = findUserByEmail(email)
+        const user = usersStore.findUserByEmail(email)
         const passwordOk = user ? await bcrypt.compare(password, user.passwordHash) : false
 
         if (!user || !passwordOk) {
@@ -74,7 +73,7 @@ authRouter.post('/login', async (req, res, next) => {
         }
 
         res.json({
-            data: toPublicUser(user),
+            data: usersStore.toPublicUser(user),
             token: signToken(user)
         })
     } catch (err) {
@@ -83,5 +82,5 @@ authRouter.post('/login', async (req, res, next) => {
 })
 
 authRouter.get('/me', requireAuth, (req, res) => {
-    res.json({ data: toPublicUser(req.user) })
+    res.json({ data: usersStore.toPublicUser(req.user) })
 })
